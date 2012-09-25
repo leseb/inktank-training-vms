@@ -1,0 +1,79 @@
+#!/bin/sh
+set -e
+
+# ./virtualenv/bin/python -c 'from downburst.discover import get; print get()'
+# {'url': u'https://cloud-images.ubuntu.com/server/releases/precise/release-20120424/ubuntu-12.04-server-cloudimg-amd64-disk1.img', 'serial': u'20120424', 'sha512': u'0737607be5c9b8ef9b7c45a77802b0098ce99d737e1a233e1e582f98ea10b6619dcb280bb7e5c6cefcba275473e9be56a7058fea534db7534908d3d083c569bd'}
+
+IMAGE_SERIAL=20120424
+IMAGE_URL="https://cloud-images.ubuntu.com/server/releases/precise/release-$IMAGE_SERIAL/ubuntu-12.04-server-cloudimg-amd64-disk1.img"
+
+IMAGE_BASE="ubuntu-12.04-server-cloudimg-amd64-disk1.$IMAGE_SERIAL"
+IMAGE_QCOW2="$IMAGE_BASE.qcow2"
+IMAGE_VMDK="$IMAGE_BASE.vmdk"
+
+if [ ! -e "$IMAGE_QCOW2" ]; then
+    wget -c -O "$IMAGE_QCOW2.tmp" "$IMAGE_URL"
+    mv -- "$IMAGE_QCOW2.tmp" "$IMAGE_QCOW2"
+fi
+
+if [ ! -e "$IMAGE_VMDK" ]; then
+    # vmdk's it accepts (seems to require streamOptimized), and qemu
+    # doesn't understand vmdk very well and can only reliably generate
+    # monolithicSparse images ("qemu-img convert -O vmdk -o
+    # subformat=monolithicSparse" fails), so work around that (see
+    # https://bugs.launchpad.net/ubuntu/+source/qemu-kvm/+bug/1006655
+    # ); vboxmanage convertfromraw is just as bad, so we create the
+    # wrong kind of vmdk first (monolithicSparse), and then clone it
+    # to the right kind of vmdk (streamOptimized)
+    qemu-img convert -O vmdk -o subformat=monolithicSparse "$IMAGE_QCOW2" "$IMAGE_VMDK.sparse"
+    vboxmanage clonehd --format=VMDK --variant=Stream "$IMAGE_VMDK.sparse" "$IMAGE_VMDK.tmp"
+    rm -f -- "$IMAGE_VMDK.sparse"
+    mv -- "$IMAGE_VMDK.tmp" "$IMAGE_VMDK"
+fi
+
+# virtualbox import fails if we try to create disks on the fly,
+# without backing files in the OVF
+for host in ceph1 ceph2; do
+    for disk in 1 2; do
+	DISK="data.$host-$disk.vmdk"
+	vboxmanage createhd --filename "$DISK" --size 10240 --format VMDK --variant Stream
+    done
+done
+
+CLOUD_INIT_SIZE=1048576
+
+for host in client ceph1 ceph2; do
+    # need to use VFAT because we don't know how to include an ISO in
+    # an OVF file :(
+    rm -f -- "cloud-init.$host.raw"
+    dd if=/dev/zero of="cloud-init.$host.raw" bs=1 seek="$CLOUD_INIT_SIZE" count=0
+    mkfs.vfat -n cidata "cloud-init.$host.raw"
+    mcopy -i "cloud-init.$host.raw" - ::meta-data <<EOF
+instance-id: $host
+local-hostname: $host
+EOF
+    mcopy -i "cloud-init.$host.raw" user-data ::
+    qemu-img convert -O vmdk -o subformat=monolithicSparse "cloud-init.$host.raw" "cloud-init.$host.sparse"
+    rm -f -- "cloud-init.$host.vmdk"
+    vboxmanage clonehd --format=VMDK --variant=Stream "cloud-init.$host.sparse" "cloud-init.$host.vmdk"
+    rm -f -- "cloud-init.$host.raw" "cloud-init.$host.sparse"
+done
+
+xmlstarlet \
+    ed \
+    -N ovf=http://schemas.dmtf.org/ovf/envelope/1 \
+    -u '/ovf:Envelope/ovf:DiskSection/ovf:Disk[@ovf:capacity="CLOUD_INIT_SIZE"]/@ovf:capacity' -v "$CLOUD_INIT_SIZE" \
+    <ovf-template.xml \
+    >ceph-training.ovf
+
+# i can't get virtualbox to verify manifests right, so they're disabled for now
+# openssl sha1 $(xmlstarlet sel -N ovf=http://schemas.dmtf.org/ovf/envelope/1 -t -m /ovf:Envelope/ovf:References/ovf:File -v ./@ovf:href -n <ceph-training.ovf) \
+#     >ceph-training.mf
+
+# note: virtualbox is too stupid to understand same vmdk being used
+# multiple times from within the tar file; for virtualbox, you'll need
+# to unpack the ova, or just download the individual files
+
+# OVF spec dictates tar member ordering
+tar cf ceph-training.ova -- ceph-training.ovf \
+    $(xmlstarlet sel -N ovf=http://schemas.dmtf.org/ovf/envelope/1 -t -m /ovf:Envelope/ovf:References/ovf:File -v ./@ovf:href -n <ceph-training.ovf)

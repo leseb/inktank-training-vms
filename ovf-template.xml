@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Envelope xmlns="http://schemas.dmtf.org/ovf/envelope/1" xmlns:cim="http://schemas.dmtf.org/wbem/wscim/1/common" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" xmlns:vssd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_VirtualSystemSettingData" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <References>
+    <File ovf:href="ubuntu-12.04-server-cloudimg-amd64-disk1.20120424.vmdk" ovf:id="ubuntu-cloud-image.vmdk" />
+    <File ovf:href="cloud-init.client.vmdk" ovf:id="cloud-init.client.vmdk" />
+    <File ovf:href="cloud-init.ceph1.vmdk" ovf:id="cloud-init.ceph1.vmdk" />
+    <File ovf:href="data.ceph1-1.vmdk" ovf:id="data.ceph1-1.vmdk" />
+    <File ovf:href="data.ceph1-2.vmdk" ovf:id="data.ceph1-2.vmdk" />
+    <File ovf:href="cloud-init.ceph2.vmdk" ovf:id="cloud-init.ceph2.vmdk" />
+    <File ovf:href="data.ceph2-1.vmdk" ovf:id="data.ceph2-1.vmdk" />
+    <File ovf:href="data.ceph2-2.vmdk" ovf:id="data.ceph2-2.vmdk" />
+  </References>
+
+  <DiskSection>
+    <Info>Virtual disk information</Info>
+    <!-- virtualbox doesn't deal well with ovf:parentRef, so we just
+         import the ubuntu cloud image over and over again -->
+    <Disk ovf:capacity="10737418240" ovf:diskId="root.client" ovf:fileRef="ubuntu-cloud-image.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+    <Disk ovf:capacity="CLOUD_INIT_SIZE" ovf:diskId="cloud-init.client" ovf:fileRef="cloud-init.client.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+
+    <Disk ovf:capacity="10737418240" ovf:diskId="root.ceph1" ovf:fileRef="ubuntu-cloud-image.vmdk"
+	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+    <Disk ovf:capacity="CLOUD_INIT_SIZE" ovf:diskId="cloud-init.ceph1" ovf:fileRef="cloud-init.ceph1.vmdk"
+	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+    <Disk ovf:capacity="10737418240" ovf:diskId="data.ceph1-1" ovf:fileRef="data.ceph1-1.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+    <Disk ovf:capacity="10737418240" ovf:diskId="data.ceph1-2" ovf:fileRef="data.ceph1-2.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+
+    <Disk ovf:capacity="10737418240" ovf:diskId="root.ceph2" ovf:fileRef="ubuntu-cloud-image.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+    <Disk ovf:capacity="CLOUD_INIT_SIZE" ovf:diskId="cloud-init.ceph2" ovf:fileRef="cloud-init.ceph2.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+    <Disk ovf:capacity="10737418240" ovf:diskId="data.ceph2-1" ovf:fileRef="data.ceph2-1.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+    <Disk ovf:capacity="10737418240" ovf:diskId="data.ceph2-2" ovf:fileRef="data.ceph2-2.vmdk"
+    	  ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"/>
+
+  </DiskSection>
+
+  <NetworkSection>
+    <Info>The list of logical networks</Info>
+    <Network ovf:name="bridged">
+      <Description>The bridged network</Description>
+    </Network>
+  </NetworkSection>
+
+  <VirtualSystemCollection ovf:id="ceph-training">
+    <Info>Virtual machines for Ceph training</Info>
+    <Name>Ceph Training</Name>
+
+    <ProductSection>
+      <Info>Virtual Machine images for Ceph hands-on training</Info>
+      <Product>Ceph Training VM</Product>
+      <Vendor>Inktank</Vendor>
+      <VendorURL>http://inktank.com/</VendorURL>
+    </ProductSection>
+
+    <VirtualSystem ovf:id="client">
+      <Info>Client machine for Ceph training</Info>
+      <OperatingSystemSection ovf:id="93">
+	<Info>12.04 (Precise Pangolin) Server</Info>
+      </OperatingSystemSection>
+      <VirtualHardwareSection>
+	<Info>Virtual hardware requirements</Info>
+	<System>
+	  <vssd:ElementName>Virtual Hardware Family</vssd:ElementName>
+	  <vssd:InstanceID>0</vssd:InstanceID>
+	  <vssd:VirtualSystemIdentifier>Ubuntu 12.04 (Precise Pangolin) Server</vssd:VirtualSystemIdentifier>
+	  <vssd:VirtualSystemType>vmx-07 qemu-pc qemu-pc-0.13 virtualbox-2.2</vssd:VirtualSystemType>
+	</System>
+	<Item>
+	  <rasd:AllocationUnits>hertz * 10^6</rasd:AllocationUnits>
+	  <rasd:Description>Number of Virtual CPUs</rasd:Description>
+	  <rasd:ElementName>1 virtual CPU(s)</rasd:ElementName>
+	  <rasd:InstanceID>1</rasd:InstanceID>
+	  <rasd:ResourceType>3</rasd:ResourceType>
+	  <rasd:VirtualQuantity>1</rasd:VirtualQuantity>
+	</Item>
+	<Item>
+	  <rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
+	  <rasd:Description>Memory Size</rasd:Description>
+	  <rasd:ElementName>512MB of memory</rasd:ElementName>
+	  <rasd:InstanceID>2</rasd:InstanceID>
+	  <rasd:ResourceType>4</rasd:ResourceType>
+	  <rasd:VirtualQuantity>512</rasd:VirtualQuantity>
+	</Item>
+	<Item>
+	  <rasd:Address>0</rasd:Address>
+	  <rasd:Description>SCSI Controller</rasd:Description>
+	  <rasd:ElementName>scsiController0</rasd:ElementName>
+	  <rasd:InstanceID>4</rasd:InstanceID>
+	  <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
+	  <rasd:ResourceType>6</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:Address>1</rasd:Address>
+	  <rasd:Description>IDE Controller</rasd:Description>
+	  <rasd:ElementName>ideController1</rasd:ElementName>
+	  <rasd:InstanceID>5</rasd:InstanceID>
+	  <rasd:ResourceType>5</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>0</rasd:AddressOnParent>
+	  <rasd:ElementName>disk1</rasd:ElementName>
+	  <rasd:HostResource>/disk/root.client</rasd:HostResource>
+	  <rasd:InstanceID>7</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>1</rasd:AddressOnParent>
+	  <rasd:ElementName>disk2</rasd:ElementName>
+	  <rasd:HostResource>/disk/cloud-init.client</rasd:HostResource>
+	  <rasd:InstanceID>8</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>2</rasd:AddressOnParent>
+	  <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
+	  <rasd:Connection>bridged</rasd:Connection>
+	  <rasd:Description>ethernet adapter on &quot;bridged&quot;</rasd:Description>
+	  <rasd:ElementName>ethernet0</rasd:ElementName>
+	  <rasd:InstanceID>9</rasd:InstanceID>
+	  <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
+	  <rasd:ResourceType>10</rasd:ResourceType>
+	</Item>
+      </VirtualHardwareSection>
+    </VirtualSystem>
+
+    <VirtualSystem ovf:id="ceph1">
+      <Info>A virtual machine</Info>
+      <OperatingSystemSection ovf:id="93">
+	<Info>12.04 (Precise Pangolin) Server</Info>
+      </OperatingSystemSection>
+      <VirtualHardwareSection>
+	<Info>Virtual hardware requirements</Info>
+	<System>
+	  <vssd:ElementName>Virtual Hardware Family</vssd:ElementName>
+	  <vssd:InstanceID>0</vssd:InstanceID>
+	  <vssd:VirtualSystemIdentifier>Ubuntu 12.04 (Precise Pangolin) Server</vssd:VirtualSystemIdentifier>
+	  <vssd:VirtualSystemType>vmx-07 qemu-pc qemu-pc-0.13 virtualbox-2.2</vssd:VirtualSystemType>
+	</System>
+	<Item>
+	  <rasd:AllocationUnits>hertz * 10^6</rasd:AllocationUnits>
+	  <rasd:Description>Number of Virtual CPUs</rasd:Description>
+	  <rasd:ElementName>1 virtual CPU(s)</rasd:ElementName>
+	  <rasd:InstanceID>1</rasd:InstanceID>
+	  <rasd:ResourceType>3</rasd:ResourceType>
+	  <rasd:VirtualQuantity>1</rasd:VirtualQuantity>
+	</Item>
+	<Item>
+	  <rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
+	  <rasd:Description>Memory Size</rasd:Description>
+	  <rasd:ElementName>512MB of memory</rasd:ElementName>
+	  <rasd:InstanceID>2</rasd:InstanceID>
+	  <rasd:ResourceType>4</rasd:ResourceType>
+	  <rasd:VirtualQuantity>512</rasd:VirtualQuantity>
+	</Item>
+	<Item>
+	  <rasd:Address>0</rasd:Address>
+	  <rasd:Description>SCSI Controller</rasd:Description>
+	  <rasd:ElementName>scsiController0</rasd:ElementName>
+	  <rasd:InstanceID>4</rasd:InstanceID>
+	  <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
+	  <rasd:ResourceType>6</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:Address>1</rasd:Address>
+	  <rasd:Description>IDE Controller</rasd:Description>
+	  <rasd:ElementName>ideController1</rasd:ElementName>
+	  <rasd:InstanceID>5</rasd:InstanceID>
+	  <rasd:ResourceType>5</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>0</rasd:AddressOnParent>
+	  <rasd:ElementName>disk1</rasd:ElementName>
+	  <rasd:HostResource>/disk/root.ceph1</rasd:HostResource>
+	  <rasd:InstanceID>7</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>1</rasd:AddressOnParent>
+	  <rasd:ElementName>disk2</rasd:ElementName>
+	  <rasd:HostResource>/disk/cloud-init.ceph1</rasd:HostResource>
+	  <rasd:InstanceID>8</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>2</rasd:AddressOnParent>
+	  <rasd:ElementName>disk3</rasd:ElementName>
+	  <rasd:HostResource>/disk/data.ceph1-1</rasd:HostResource>
+	  <rasd:InstanceID>9</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>3</rasd:AddressOnParent>
+	  <rasd:ElementName>disk4</rasd:ElementName>
+	  <rasd:HostResource>/disk/data.ceph1-2</rasd:HostResource>
+	  <rasd:InstanceID>10</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>2</rasd:AddressOnParent>
+	  <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
+	  <rasd:Connection>bridged</rasd:Connection>
+	  <rasd:Description>ethernet adapter on &quot;bridged&quot;</rasd:Description>
+	  <rasd:ElementName>ethernet0</rasd:ElementName>
+	  <rasd:InstanceID>11</rasd:InstanceID>
+	  <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
+	  <rasd:ResourceType>10</rasd:ResourceType>
+	</Item>
+      </VirtualHardwareSection>
+    </VirtualSystem>
+
+    <VirtualSystem ovf:id="ceph2">
+      <Info>A virtual machine</Info>
+      <OperatingSystemSection ovf:id="93">
+	<Info>12.04 (Precise Pangolin) Server</Info>
+      </OperatingSystemSection>
+      <VirtualHardwareSection>
+	<Info>Virtual hardware requirements</Info>
+	<System>
+	  <vssd:ElementName>Virtual Hardware Family</vssd:ElementName>
+	  <vssd:InstanceID>0</vssd:InstanceID>
+	  <vssd:VirtualSystemIdentifier>Ubuntu 12.04 (Precise Pangolin) Server</vssd:VirtualSystemIdentifier>
+	  <vssd:VirtualSystemType>vmx-07 qemu-pc qemu-pc-0.13 virtualbox-2.2</vssd:VirtualSystemType>
+	</System>
+	<Item>
+	  <rasd:AllocationUnits>hertz * 10^6</rasd:AllocationUnits>
+	  <rasd:Description>Number of Virtual CPUs</rasd:Description>
+	  <rasd:ElementName>1 virtual CPU(s)</rasd:ElementName>
+	  <rasd:InstanceID>1</rasd:InstanceID>
+	  <rasd:ResourceType>3</rasd:ResourceType>
+	  <rasd:VirtualQuantity>1</rasd:VirtualQuantity>
+	</Item>
+	<Item>
+	  <rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
+	  <rasd:Description>Memory Size</rasd:Description>
+	  <rasd:ElementName>512MB of memory</rasd:ElementName>
+	  <rasd:InstanceID>2</rasd:InstanceID>
+	  <rasd:ResourceType>4</rasd:ResourceType>
+	  <rasd:VirtualQuantity>512</rasd:VirtualQuantity>
+	</Item>
+	<Item>
+	  <rasd:Address>0</rasd:Address>
+	  <rasd:Description>SCSI Controller</rasd:Description>
+	  <rasd:ElementName>scsiController0</rasd:ElementName>
+	  <rasd:InstanceID>4</rasd:InstanceID>
+	  <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
+	  <rasd:ResourceType>6</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:Address>1</rasd:Address>
+	  <rasd:Description>IDE Controller</rasd:Description>
+	  <rasd:ElementName>ideController1</rasd:ElementName>
+	  <rasd:InstanceID>5</rasd:InstanceID>
+	  <rasd:ResourceType>5</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>0</rasd:AddressOnParent>
+	  <rasd:ElementName>disk1</rasd:ElementName>
+	  <rasd:HostResource>/disk/root.ceph2</rasd:HostResource>
+	  <rasd:InstanceID>7</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>1</rasd:AddressOnParent>
+	  <rasd:ElementName>disk2</rasd:ElementName>
+	  <rasd:HostResource>/disk/cloud-init.ceph2</rasd:HostResource>
+	  <rasd:InstanceID>8</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>2</rasd:AddressOnParent>
+	  <rasd:ElementName>disk3</rasd:ElementName>
+	  <rasd:HostResource>/disk/data.ceph2-1</rasd:HostResource>
+	  <rasd:InstanceID>9</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>3</rasd:AddressOnParent>
+	  <rasd:ElementName>disk4</rasd:ElementName>
+	  <rasd:HostResource>/disk/data.ceph2-2</rasd:HostResource>
+	  <rasd:InstanceID>10</rasd:InstanceID>
+	  <rasd:Parent>4</rasd:Parent>
+	  <rasd:ResourceType>17</rasd:ResourceType>
+	</Item>
+	<Item>
+	  <rasd:AddressOnParent>2</rasd:AddressOnParent>
+	  <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
+	  <rasd:Connection>bridged</rasd:Connection>
+	  <rasd:Description>ethernet adapter on &quot;bridged&quot;</rasd:Description>
+	  <rasd:ElementName>ethernet0</rasd:ElementName>
+	  <rasd:InstanceID>11</rasd:InstanceID>
+	  <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
+	  <rasd:ResourceType>10</rasd:ResourceType>
+	</Item>
+      </VirtualHardwareSection>
+    </VirtualSystem>
+
+  </VirtualSystemCollection>
+
+</Envelope>

@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+botosh -c '
+import sys
+b = s3.train.create_bucket("inktank-training-vms")
+b.set_canned_acl("public-read")
+for fn in sys.argv[1:]:
+    k = b.new_key(fn)
+    # k.set_contents_from_filename(fn)
+    k.set_canned_acl("public-read")
+index = "".join("<a href=\""+fn+"\">"+fn+"</a><br/>" for fn in sys.argv[1:])
+k = b.new_key("index.html")
+k.set_metadata("Content-Type", "text/html")
+k.set_contents_from_string(index)
+k.set_canned_acl("public-read")
+' \
+  ceph-training.ova \
+  ceph-training.ovf \
+  $(xmlstarlet sel -N ovf=http://schemas.dmtf.org/ovf/envelope/1 -t -m /ovf:Envelope/ovf:References/ovf:File -v ./@ovf:href -n <ceph-training.ovf)
+
+
